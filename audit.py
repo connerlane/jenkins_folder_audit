@@ -92,9 +92,10 @@ def audit(path, job_list, folder):
 
 def update_status(job_list, threshold):
     for j in job_list:
-        t = convert_time_to_minutes(j.last_ran)
-        if t < threshold * 24 * 60:  # ran in past month
-            j.status = "Active"
+        if j.last_ran != "N/A":
+            t = convert_time_to_minutes(j.last_ran)
+            if t <= threshold * 24 * 60:  # ran in past month
+                j.status = "Active"
 
 
 def main():
@@ -105,7 +106,7 @@ def main():
     audit(url, job_list, m.group(1))
     f = open(m.group(2) + "_audit.txt", 'w+')
     f.write("Job Name\tLast Success\tLast Failure\tLast Ran\tStatus")
-    update_status(job_list, threshold)
+    update_status(job_list, int(threshold))
     for j in job_list:
         f.write(
             "\n" +
