@@ -9,6 +9,7 @@ class Job:
         self.last_success = last_success
         self.last_fail = last_fail
         self.last_ran = last_ran
+        self.status = ""
 
 
 def most_recent_date(date1, date2):
@@ -89,13 +90,22 @@ def audit(path, job_list, folder):
             job_list.append(j)
 
 
+def update_status(job_list, threshold):
+    for j in job_list:
+        t = convert_time_to_minutes(j.last_ran)
+        if t < threshold * 24 * 60:  # ran in past month
+            j.status = "Active"
+
+
 def main():
     job_list = []
     url = raw_input('Enter the full jenkins url of the folder to be audited: ')
+    threshold = raw_input('\'Active\' Threshold (in days): ')
     m = re.search('/(([^/]+)/)$', url)
     audit(url, job_list, m.group(1))
     f = open(m.group(2) + "_audit.txt", 'w+')
-    f.write("Job Name\tLast Success\tLast Failure\tLast Ran")
+    f.write("Job Name\tLast Success\tLast Failure\tLast Ran\tStatus")
+    update_status(job_list, threshold)
     for j in job_list:
         f.write(
             "\n" +
@@ -105,7 +115,9 @@ def main():
             "\t" +
             j.last_fail +
             "\t" +
-            j.last_ran)
+            j.last_ran +
+            "\t" +
+            j.status)
     print("output saved to " + m.group(2) + "_audit.txt")
 
 
