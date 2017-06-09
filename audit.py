@@ -94,7 +94,7 @@ def update_status(job_list, threshold):
     for j in job_list:
         if j.last_ran != "N/A":
             t = convert_time_to_minutes(j.last_ran)
-            if t <= threshold * 24 * 60:  # ran in past month
+            if t <= threshold * 24 * 60:
                 j.status = "Active"
 
 
