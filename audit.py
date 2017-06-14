@@ -1,6 +1,9 @@
 import requests
 from lxml import html
 import re
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 
 class Job:
@@ -63,11 +66,12 @@ def audit(path, job_list, folder):
     for job in jobs:
 
         job_id = job.get('id')[4:]
+
         if 'Folder' in html.tostring(
-                job) or 'GitHub Repository' in html.tostring(job):
+                job) or 'GitHub Repository' in html.tostring(job) or 'GitHub Organization' in html.tostring(job):
             audit(path + "job/" + job_id + "/", job_list, folder + "job/" + job_id + "/")
 
-        elif not 'top-nav' in html.tostring(job):
+        elif not 'top-nav' in html.tostring(job) and len(job.findall('td')) >= 5:
             success = ((job.findall('td')[3]).text).strip('- ').strip()
             fail = ((job.findall('td')[4]).text).strip('- ').strip()
             j = Job(
@@ -83,22 +87,26 @@ def audit(path, job_list, folder):
 
 
 def update_status(job_list, threshold):
+    aj = 0
     for j in job_list:
         if j.last_ran != "N/A":
             t = convert_time_to_minutes(j.last_ran)
             if t <= threshold * 24 * 60:
+                aj += 1
                 j.status = "Active"
+    return aj
 
 
 def main():
     job_list = []
+
     url = raw_input('Enter the full jenkins url of the folder to be audited: ')
     threshold = raw_input('\'Active\' Threshold (in days): ')
     m = re.search('/(([^/]+)/)$', url)
     audit(url, job_list, m.group(1))
     f = open(m.group(2) + "_audit.txt", 'w+')
     f.write("Job Name\tLast Success\tLast Failure\tLast Ran\tStatus")
-    update_status(job_list, int(threshold))
+    active_jobs = update_status(job_list, int(threshold))
     for j in job_list:
         f.write(
             "\n" +
@@ -111,7 +119,9 @@ def main():
             j.last_ran +
             "\t" +
             j.status)
-    print("output saved to " + m.group(2) + "_audit.txt")
 
+    print("output saved to " + m.group(2) + "_audit.txt")
+    print("total number of jobs: " + str(len(job_list)))
+    print("number of active jobs: " + str(active_jobs))
 
 main()
