@@ -67,8 +67,9 @@ def audit(path, job_list, folder):
 
         job_id = job.get('id')[4:]
 
-        if 'Folder' in html.tostring(
-                job) or 'GitHub Repository' in html.tostring(job) or 'GitHub Organization' in html.tostring(job):
+        if ('Folder' in html.tostring(job) 
+            or 'GitHub Repository' in html.tostring(job) 
+            or 'GitHub Organization' in html.tostring(job)):
             audit(path + "job/" + job_id + "/", job_list, folder + "job/" + job_id + "/")
 
         elif not 'top-nav' in html.tostring(job) and len(job.findall('td')) >= 5:
